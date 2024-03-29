@@ -1,0 +1,21 @@
+/**:
+  ros__parameters:
+    sector: 1
+    cell_length: 5
+    delivery_stations: [5, 0]
+
+/sector_b/robot_1b:
+  ros__parameters:
+    initial_position: [5, 1]
+    battery_per_cell: 2
+    capacity: 15
+    speed: 5
+    battery: 20
+
+/sector_b/robot_2b:
+  ros__parameters:
+    initial_position: [5, 2]
+    battery_per_cell: 2
+    capacity: 15
+    speed: 5
+    battery: 100
