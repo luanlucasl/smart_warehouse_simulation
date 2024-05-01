@@ -1,0 +1,30 @@
+/**:
+  ros__parameters:
+    sector: 3
+    cell_length: 2
+    delivery_station: [17, 7]
+    battery_per_cell: 2
+    capacity: 1900
+    speed: 2
+    battery: 100
+
+/warehouse/robot_1d:
+  ros__parameters:
+    initial_position: [15, 4]
+
+/warehouse/robot_2d:
+  ros__parameters:
+    initial_position: [15, 5]
+
+/warehouse/robot_3d:
+  ros__parameters:
+    initial_position: [15, 6]
+
+/warehouse/robot_4d:
+  ros__parameters:
+    initial_position: [18, 4]
+
+/warehouse/robot_5d:
+  ros__parameters:
+    initial_position: [18, 5]
+

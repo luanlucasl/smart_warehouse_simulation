@@ -6,82 +6,74 @@ from launch import LaunchDescription
 from launch.actions import GroupAction
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_ros.actions import Node
 from launch_ros.actions import PushRosNamespace
 
 
 def generate_launch_description():
-    sector_a_robot_one = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory('robot'), 'launch'),
-            '/launch_sector_a_robot.py']),
-        launch_arguments={'robot_name': 'robot_1a'}.items()
+    metrics_collector = Node(
+        package='metrics_collector',
+        namespace='warehouse',
+        executable='metrics_collector',
+        name='metrics_collector'
     )
 
-    sector_a_robot_two = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory('robot'), 'launch'),
-            '/launch_sector_a_robot.py']),
-        launch_arguments={'robot_name': 'robot_2a'}.items()
-    )
+    # sector 0
+    n = 50
+    nodes_sector_a = [None] * (n + 1)
+    nodes_sector_a[0] = PushRosNamespace('warehouse')
+    for i in range(1, n + 1):
+        nodes_sector_a[i] = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(
+                get_package_share_directory('robot'), 'launch'),
+                '/launch_sector_a_robot.py']),
+            launch_arguments={'robot_name': 'robot_' + str(i) + 'a'}.items()
+        )
+    sector_a_robots = GroupAction(actions=nodes_sector_a)
 
-    sector_a_robots = GroupAction(
-        actions=[
-            PushRosNamespace('sector_a'),
-            sector_a_robot_one,
-            sector_a_robot_two,
-        ]
-    )
+    # sector 1
+    n = 30
+    nodes_sector_b = [None] * (n + 1)
+    nodes_sector_b[0] = PushRosNamespace('warehouse')
+    for i in range(1, n + 1):
+        nodes_sector_b[i] = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(
+                get_package_share_directory('robot'), 'launch'),
+                '/launch_sector_b_robot.py']),
+            launch_arguments={'robot_name': 'robot_' + str(i) + 'b'}.items()
+        )
+    sector_b_robots = GroupAction(actions=nodes_sector_b)
 
-    sector_b_robot_one = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory('robot'), 'launch'),
-            '/launch_sector_b_robot.py']),
-        launch_arguments={'robot_name': 'robot_1b'}.items()
-    )
+    # sector 2
+    n = 5
+    nodes_sector_c = [None] * (n + 1)
+    nodes_sector_c[0] = PushRosNamespace('warehouse')
+    for i in range(1, n + 1):
+        nodes_sector_c[i] = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(
+                get_package_share_directory('robot'), 'launch'),
+                '/launch_sector_c_robot.py']),
+            launch_arguments={'robot_name': 'robot_' + str(i) + 'c'}.items()
+        )
+    sector_c_robots = GroupAction(actions=nodes_sector_c)
 
-    sector_b_robot_two = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory('robot'), 'launch'),
-            '/launch_sector_b_robot.py']),
-        launch_arguments={'robot_name': 'robot_2b'}.items()
-    )
-
-    sector_b_robots = GroupAction(
-        actions=[
-            PushRosNamespace('sector_b'),
-            sector_b_robot_one,
-            sector_b_robot_two
-        ]
-    )
-
-    # turtlesim_world_1 = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource([os.path.join(
-    #         get_package_share_directory('launch_tutorial'), 'launch'),
-    #         '/turtlesim_world_1_launch.py'])
-    # )
-    # broadcaster_listener_nodes = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource([os.path.join(
-    #         get_package_share_directory('launch_tutorial'), 'launch'),
-    #         '/broadcaster_listener_launch.py']),
-    #     launch_arguments={'target_frame': 'carrot1'}.items(),
-    # )
-    # mimic_node = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource([os.path.join(
-    #         get_package_share_directory('launch_tutorial'), 'launch'),
-    #         '/mimic_launch.py'])
-    # )
-    # fixed_frame_node = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource([os.path.join(
-    #         get_package_share_directory('launch_tutorial'), 'launch'),
-    #         '/fixed_broadcaster_launch.py'])
-    # )
-    # rviz_node = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource([os.path.join(
-    #         get_package_share_directory('launch_tutorial'), 'launch'),
-    #         '/turtlesim_rviz_launch.py'])
-    # )
+    # sector 3
+    n = 5
+    nodes_sector_d = [None] * (n + 1)
+    nodes_sector_d[0] = PushRosNamespace('warehouse')
+    for i in range(1, n + 1):
+        nodes_sector_d[i] = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(
+                get_package_share_directory('robot'), 'launch'),
+                '/launch_sector_d_robot.py']),
+            launch_arguments={'robot_name': 'robot_' + str(i) + 'd'}.items()
+        )
+    sector_d_robots = GroupAction(actions=nodes_sector_d)
 
     return LaunchDescription([
+        metrics_collector,
         sector_a_robots,
-        # sector_b_robots
+        # sector_b_robots,
+        # sector_c_robots,
+        # sector_d_robots
     ])
