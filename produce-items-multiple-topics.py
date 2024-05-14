@@ -76,15 +76,11 @@ class ItemProducer():
 		self.producer = KafkaProducer(bootstrap_servers=bootstrap_server, value_serializer=lambda m: json.dumps(m).encode('utf-8'), acks='all')
 
 
-	def run(self):
-		self.produce()
-
-
-	def produce(self):
-		sector_0 = self.__read_sector_data('sector_0')
-		sector_1 = self.__read_sector_data('sector_1')
-		sector_2 = self.__read_sector_data('sector_2')
-		sector_3 = self.__read_sector_data('sector_3')
+	def produce(self, sector_0_file, sector_1_file, sector_2_file, sector_3_file):
+		sector_0 = self.__read_sector_data(sector_0_file)
+		sector_1 = self.__read_sector_data(sector_1_file)
+		sector_2 = self.__read_sector_data(sector_2_file)
+		sector_3 = self.__read_sector_data(sector_3_file)
 		max_items = max(len(sector_0), len(sector_1), len(sector_2), len(sector_3))
 
 		try:
@@ -92,10 +88,9 @@ class ItemProducer():
 				time.sleep(1)
 				created_at = int(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).timestamp())
 				self.messages_sent += self.__publish_item(0, created_at, index, sector_0)
-				# self.messages_sent += self.__publish_item(1, created_at, index, sector_1)
-				# self.messages_sent += self.__publish_item(2, created_at, index, sector_2)
-				# self.messages_sent += self.__publish_item(3, created_at, index, sector_3)
-				
+				self.messages_sent += self.__publish_item(1, created_at, index, sector_1)
+				self.messages_sent += self.__publish_item(2, created_at, index, sector_2)
+				self.messages_sent += self.__publish_item(3, created_at, index, sector_3)
 				
 				print('Sent %s' % str(self.messages_sent))
 		except Exception as e:
@@ -127,5 +122,9 @@ if __name__ == '__main__':
 	logging.basicConfig(format='%(threadName)s:%(message)s', filename='example.log', encoding='utf-8', level=logging.INFO, filemode='w')
 	bootstrap_server = sys.argv[1]
 	topic = sys.argv[2]
+	sector_0_file = sys.argv[3]
+	sector_1_file = sys.argv[4]
+	sector_2_file = sys.argv[5]
+	sector_3_file = sys.argv[6]
 
-	ItemProducer(bootstrap_server, topic).produce()
+	ItemProducer(bootstrap_server, topic).produce(sector_0_file, sector_1_file, sector_2_file, sector_3_file)

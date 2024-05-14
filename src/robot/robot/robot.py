@@ -1,7 +1,10 @@
 import json
 import rclpy
-import time
+import os
+
 from collections import deque
+from .calculation import battery_ratio
+from rclpy.duration import Duration
 from rclpy import qos
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
@@ -10,11 +13,11 @@ from rclpy.qos import QoSProfile
 from rclpy.qos import QoSHistoryPolicy
 from rclpy.qos import QoSReliabilityPolicy
 from rclpy.qos import QoSDurabilityPolicy
-from rclpy.qos import QoSLivelinessPolicy
 from std_msgs.msg import String
 
-from .calculation import additional_battery_cost, necessary_battery_to_move, necessary_battery_to_process_item, \
-    necessary_time_to_move, necessary_battery_to_lift_arm, necessary_time_to_lift_arm
+from .calculation import additional_battery_cost, necessary_battery_to_move, \
+     necessary_battery_to_move_to_docking_station_with_safety_from_delivery_station, necessary_battery_to_process_item, necessary_time_to_move, \
+     necessary_battery_to_lift_arm, necessary_time_to_lift_arm
 from .decision import is_recharge_threshold_met, should_accept_item
 from .kafka_consumer_wrapper import KafkaConsumerWrapper
 from .point import Point
@@ -28,8 +31,8 @@ class Robot(Node):
         self.declare_parameter('delivery_station', rclpy.Parameter.Type.INTEGER_ARRAY)
         self.declare_parameter('initial_position', rclpy.Parameter.Type.INTEGER_ARRAY)
         self.declare_parameter('sector', rclpy.Parameter.Type.INTEGER)
-        self.declare_parameter('cell_length', rclpy.Parameter.Type.INTEGER)
-        self.declare_parameter('battery_per_cell', rclpy.Parameter.Type.INTEGER)
+        self.declare_parameter('cell_length', rclpy.Parameter.Type.DOUBLE)
+        self.declare_parameter('battery_per_cell', rclpy.Parameter.Type.DOUBLE)
         self.declare_parameter('capacity', rclpy.Parameter.Type.INTEGER)
         self.declare_parameter('speed', rclpy.Parameter.Type.INTEGER)
         self.declare_parameter('battery', rclpy.Parameter.Type.INTEGER)
@@ -38,12 +41,12 @@ class Robot(Node):
         delivery_station = self.get_parameter('delivery_station').get_parameter_value().integer_array_value
         initial_position = self.get_parameter('initial_position').get_parameter_value().integer_array_value
         self.__sector = self.get_parameter('sector').get_parameter_value().integer_value
-        self.__cell_length = self.get_parameter('cell_length').get_parameter_value().integer_value
-        self.__battery_per_cell = self.get_parameter('battery_per_cell').get_parameter_value().integer_value
+        self.__cell_length = self.get_parameter('cell_length').get_parameter_value().double_value
+        self.__battery_per_cell = self.get_parameter('battery_per_cell').get_parameter_value().double_value
 
         # kafka
+        self.__kafka_consumer = KafkaConsumerWrapper('localhost:9092', 'my-topic-1', self.__sector)
         self.get_logger().info("Robot sector {}".format(self.__sector))
-        self.__kafka_consumer = KafkaConsumerWrapper('kafka:29092', 'my-topic-1', self.__sector)
         self.__latest_offset_processed = 0
 
         # robot attributes
@@ -70,28 +73,28 @@ class Robot(Node):
         self.__process_item_callback_group = MutuallyExclusiveCallbackGroup()
         qos_profile = QoSProfile(
             history=QoSHistoryPolicy.KEEP_LAST,
-            depth=200,
+            depth=50,
             reliability=QoSReliabilityPolicy.BEST_EFFORT,
             durability=QoSDurabilityPolicy.VOLATILE
         )
 
         # create a timer to request kafka for new available item
-        self.__check_new_item_timer = self.create_timer(0.5, self.accept_item,
+        self.__check_new_item_timer = self.create_timer(0.6, self.accept_item,
                                                         callback_group=self.__check_new_item_callback_group)
         # create a timer to process items
         self.__process_item_timer = self.create_timer(0.5, self.process_item,
                                                       callback_group=self.__process_item_callback_group)
         # process data sent by other robots within the same sector
-        self.create_subscription(String, internal_sector_topic, self.update_sector_data, qos.qos_profile_sensor_data,
+        self.create_subscription(String, internal_sector_topic, self.update_sector_data, qos.qos_profile_parameters,
                                  callback_group=self.__update_data_callback_group)
 
         # share robot attributes with other robots within the sector
-        self.__sector_publisher = self.create_publisher(String, internal_sector_topic, qos.qos_profile_sensor_data)
-        self.__publish_robot_data_timer = self.create_timer(0.4, self.publish_robot_data,
+        self.__sector_publisher = self.create_publisher(String, internal_sector_topic, qos.qos_profile_parameters)
+        self.__publish_robot_data_timer = self.create_timer(0.3, self.publish_robot_data,
                                                             callback_group=self.__publish_data_callback_group)
 
         # battery
-        self.__battery_handler_timer = self.create_timer(2, self.battery_handler,
+        self.__battery_handler_timer = self.create_timer(1, self.battery_handler,
                                                          callback_group=self.__process_item_callback_group)
 
         # metrics
@@ -123,13 +126,15 @@ class Robot(Node):
         item_weight = item['weight']
         slot_level = item['slot_level']
         destination = Point(item['x'], item['y'])
-        should_process_item = should_accept_item(self.__sector_data, self.get_name(), item_weight, slot_level,
+        sector_data = self.__sector_data.copy()
+        should_process_item = should_accept_item(sector_data, self.get_name(), item_weight, slot_level,
                                                  destination, self.get_logger(), item['id'])
         if should_process_item[0]:
             # we need to update the values right after the decision so it affects next items/decisions
-            self.__current_battery -= necessary_battery_to_process_item(self.__sector_data[self.get_name()],
+            self.__current_battery -= necessary_battery_to_process_item(sector_data[self.get_name()],
                                                                         destination, item_weight, slot_level,
-                                                                        self.get_logger(), item['id'])
+                                                                        self.get_logger(), item['id'],
+                                                                        self.get_name())
             self.__latest_picked_up_position = destination
             self.__current_capacity += item_weight
             self.get_logger().info(
@@ -137,6 +142,13 @@ class Robot(Node):
                                                                          self.__current_capacity))
             self.__items_to_be_picked_up.append(item)
             item_accepted_at = self.get_clock().now().seconds_nanoseconds()[0]
+
+            self.__kafka_consumer.commit(message)
+            self.__kafka_consumer.seek(message.offset + 1)
+            self.__latest_offset_processed = message.offset + 1
+            # publish new robot data right after accepting item
+            self.publish_robot_data()
+            self.__publish_robot_data_timer.reset()
 
             metrics_message = String()
             metrics_message.data = json.dumps({'robot_id': self.get_name(),
@@ -147,13 +159,6 @@ class Robot(Node):
                                                    'created_at']},
                                               default=vars)
             self.__item_accepted_metrics_publisher.publish(metrics_message)
-
-            self.__kafka_consumer.commit(message)
-            self.__kafka_consumer.seek(message.offset + 1)
-            self.__latest_offset_processed = message.offset + 1
-            # publish new robot data right after accepting item
-            self.publish_robot_data()
-            self.__publish_robot_data_timer.reset()
         else:
             # if there's no robot available to process the task, keep the offset here until one is available
             # if should_process_item[1] == 0:
@@ -171,74 +176,64 @@ class Robot(Node):
         if not self.__battery_handler_timer.is_canceled():
             self.__battery_handler_timer.cancel()
 
-        processing_start_seconds = self.get_clock().now().seconds_nanoseconds()[0]
         starting_from = self.__current_position
-        items_data = list()
         total_distance_for_items = 0
         task_battery = 0
         task_weight = 0
         amount_of_items_processed = 0
+        processing_start_seconds = self.get_clock().now().seconds_nanoseconds()[0]
         while len(self.__items_to_be_picked_up) > 0:
             item = self.__items_to_be_picked_up.popleft()
             # self.get_logger().info("Processing new item with id: {}, located at x: {}, y: {}; current battery: {}; current capacity: {}".format(item['id'], item['x'], item['y'], self.__current_battery, self.__current_capacity))
 
             destination = Point(item['x'], item['y'])
-            items_data.append({'id': item['id'], 'created_at': item['created_at'], 'position': destination,
-                               'slot_level': item['slot_level']})
             from_position = self.__current_position
             distance = from_position.distance(destination)
-            # self.get_logger().info(
-            #     "Moving to {} to pick up item with id {}, distance {}".format(destination, item['id'], distance))
             self.__current_position = destination
-            # self.get_logger().info("Battery to move to destination: {}, current: {}".format(necessary_battery_to_move(from_position, destination, self.__battery_per_cell, additional_battery_cost(task_weight, self.__total_capacity)), self.__current_battery))
-
+            self.get_logger().info("Moving to {} to pick up item with id {}, distance {}".format(destination, item['id'], distance))
+            #self.get_logger().info("Battery to move to destination: {}, current: {}".format(necessary_battery_to_move(from_position, destination, self.__battery_per_cell, additional_battery_cost(task_weight, self.__total_capacity)), self.__current_battery))
             total_distance_for_items += distance
-            time.sleep(necessary_time_to_move(from_position, destination, self.__speed, self.__cell_length))
-
-            self.get_logger().info("Picking up item at {} with id {}".format(destination, item['id']))
             task_battery += necessary_battery_to_move(from_position, destination, self.__battery_per_cell,
                                                       additional_battery_cost(task_weight, self.__total_capacity)
-                                                      ) + necessary_battery_to_lift_arm(item['slot_level'])
+                                                      )
+            time_to_move = necessary_time_to_move(from_position, destination, self.__speed, self.__cell_length)
+            self.get_clock().sleep_for(Duration(seconds=time_to_move))
+
+            self.get_logger().info("Picking up item at {} with id {} and battery {}".format(destination, item['id'], necessary_battery_to_lift_arm(item['slot_level'])))
+            task_battery += necessary_battery_to_lift_arm(item['slot_level'])
             task_weight += item['weight']
-            # self.get_logger().info("Weight so far: {}, battery so far: {}".format(task_weight, task_battery))
-            time.sleep(necessary_time_to_lift_arm(item['slot_level']))
+            #self.get_logger().info("Weight so far: {}, battery so far: {}".format(task_weight, task_battery))
+            time_to_lift_arm = necessary_time_to_lift_arm(item['slot_level'])
+            self.get_clock().sleep_for(Duration(seconds=time_to_lift_arm))
             amount_of_items_processed += 1
 
         from_current_position = self.__current_position
+        self.__current_position = self.__delivery_station
+        self.__delivering = True
         self.get_logger().info(
             "Bringing item(s) to delivery station at {} with distance {}".format(self.__delivery_station,
                                                                                  from_current_position.distance(
                                                                                      self.__delivery_station)))
-        self.__delivering = True
-        self.__current_position = self.__delivery_station
+        # 1 is the cost to deliver the items at the delivery station
         task_battery += necessary_battery_to_move(from_current_position, self.__delivery_station,
                                                   self.__battery_per_cell,
                                                   additional_battery_cost(task_weight,
                                                                           self.__total_capacity)) + 1
-        # self.get_logger().info("Total battery including going to delivery station {}".format(task_battery))
-        # self.get_logger().info("Distance to docking station {}".format(self.__delivery_station.distance(self.__initial_position)))
-        task_battery += necessary_battery_to_move(self.__delivery_station, self.__initial_position,
-                                                  self.__battery_per_cell,
-                                                  0)
+        #self.get_logger().info("Total battery including going to delivery station {}".format(task_battery))
         self.__current_capacity = 0
         self.__latest_picked_up_position = None
-        # self.get_logger().info("Battery to delivery: {}, current: {}".format(necessary_battery_to_move(from_current_position, self.__delivery_station, self.__battery_per_cell), self.__current_battery))
         # it takes another 2 seconds to move the items from the robot onto the table
         time_to_deliver_items = necessary_time_to_move(from_current_position, self.__delivery_station,
                                                        self.__speed,
                                                        self.__cell_length) + 2
-        time.sleep(time_to_deliver_items)
+        self.get_clock().sleep_for(Duration(seconds=time_to_deliver_items))
         self.__delivering = False
         processing_end_seconds = self.get_clock().now().seconds_nanoseconds()[0]
 
-        # publish new robot data right after finishing task
-        # self.publish_robot_data()
-        # self.get_logger().info(
-        #     "Total battery after processing including to go to docking station: {}".format(task_battery))
-        # self.get_logger().info("Battery after processing item(s): {}".format(self.__current_battery))
+        self.get_logger().info("Battery after processing item(s): {}".format(self.__current_battery))
 
         metrics_message = String()
-        metrics_message.data = json.dumps({'robot_id': self.get_name(), 'items_data': items_data,
+        metrics_message.data = json.dumps({'robot_id': self.get_name(),
                                            'started_to_process_item_at': processing_start_seconds,
                                            'finished_processing_item_at': processing_end_seconds,
                                            'sector': self.__sector,
@@ -295,44 +290,50 @@ class Robot(Node):
         self.__sector_publisher.publish(ros_message)
 
     def battery_handler(self):
-        if not self.__charging and self.__current_position != self.__initial_position:
-            # if self.__current_position == self.__initial_position:
-            #     self.__current_battery = min(self.__current_battery + 2, self.__total_battery)
-            # else:
-            self.get_logger().info("Decreasing battery")
-            self.__current_battery -= 1
-
         # it will never have items while this is running
         # this can only be executed when robot is idle, which means
         # all items have been delivered
-        battery_to_go_to_charging_station = necessary_battery_to_move(self.__current_position,
-                                                                      self.__initial_position,
-                                                                      self.__battery_per_cell,
-                                                                      0) + 1
-        if (not self.__charging and (is_recharge_threshold_met(self.__current_battery, self.__total_battery) or
-                                     battery_to_go_to_charging_station >= self.__current_battery)):
-            self.__charging = True
-            from_current_position = self.__current_position
-            self.get_logger().info(
-                "Distance to docking station: {}".format(from_current_position.distance(self.__initial_position)))
-            self.__current_position = self.__initial_position
-            self.get_logger().info(
-                "Going from {} to docking station: {}".format(from_current_position, self.__initial_position))
-            time.sleep(necessary_time_to_move(from_current_position, self.__initial_position, self.__speed,
-                                              self.__cell_length))
-            self.get_logger().info("Starting to charge with battery: {}".format(self.__current_battery))
-
+        battery_to_go_to_charging_station = necessary_battery_to_move_to_docking_station_with_safety_from_delivery_station(self.__current_position,
+                                                                                                                           self.__delivery_station,
+                                                                                                                           self.__battery_per_cell)
+        if not self.__charging:
+            if (is_recharge_threshold_met(self.__current_battery, self.__total_battery) or
+                                     battery_to_go_to_charging_station >= self.__current_battery):
+                self.__charging = True
+                from_current_position = self.__current_position
+                #self.get_logger().info(
+                #    "Distance to docking station: {}".format(from_current_position.distance(self.__initial_position)))
+                self.__current_position = self.__initial_position
+                # subtract values to get the real value
+                #self.get_logger().info("Battery to docking station: {}".format(battery_to_go_to_charging_station - 1 - self.__battery_per_cell))
+                self.__current_battery -= necessary_battery_to_move(from_current_position, self.__delivery_station, self.__battery_per_cell, 0)
+                self.get_logger().info(
+                    "Going from {} to docking station: {}".format(from_current_position, self.__initial_position))
+                time_to_move = necessary_time_to_move(from_current_position, self.__initial_position, self.__speed,
+                                                self.__cell_length)
+                self.get_clock().sleep_for(Duration(seconds=time_to_move))
+                self.get_logger().info("Starting to charge with battery: {}".format(self.__current_battery))
+            elif self.__current_position != self.__initial_position:
+                #self.get_logger().info("Decreasing battery")
+                self.__current_battery -= 1
+        
         if self.__charging:
-            self.__current_battery = min(self.__current_battery + 2, self.__total_battery)
+            self.__current_battery = min(self.__current_battery + (self.__battery_per_cell * 0.8), self.__total_battery)
 
             if self.__current_battery == self.__total_battery:
                 self.__charging = False
                 # immediately catch up to items/offset on kafka broker
+                self.publish_robot_data()
+                self.__publish_robot_data_timer.reset()
+
+                self.__check_new_item_timer.cancel()
                 self.accept_item()
+                self.__check_new_item_timer.reset()
                 self.get_logger().info("Battery fully charged with {}.".format(self.__total_battery))
 
     def get_latest_processed_offset_within_sector(self):
-        robot_name = max(self.__sector_data, key=lambda x: self.__sector_data[x]['latest_offset_processed'])
+        sector_data = self.__sector_data.copy()
+        robot_name = max(self.__sector_data, key=lambda x: sector_data[x]['latest_offset_processed'])
         return self.__sector_data[robot_name]['latest_offset_processed']
 
 
@@ -340,7 +341,7 @@ def main(args=None):
     rclpy.init(args=args)
     try:
         robot = Robot()
-        executor = MultiThreadedExecutor(num_threads=5)
+        executor = MultiThreadedExecutor(num_threads=os.cpu_count())
         executor.add_node(robot)
 
         try:

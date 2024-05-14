@@ -1,4 +1,4 @@
-from .calculation import battery_ratio, necessary_battery_to_process_item
+from .calculation import battery_ratio, necessary_battery_to_move_to_docking_station_with_safety_from_delivery_station, necessary_battery_to_move_to_docking_station_from_delivery_station, necessary_battery_to_process_item
 from .priority_entry import PriorityEntry
 
 BATTERY_THRESHOLD = 0.12
@@ -7,16 +7,23 @@ BATTERY_THRESHOLD = 0.12
 def should_accept_item(sector_data, robot_name, item_weight, item_slot, destination, logger, item_id):
     available_robots = dict()
     for key, value in sector_data.items():
-        if (not value['charging'] and not value['delivering']
-                and value['current_capacity'] + item_weight <= value['total_capacity']
-                and not is_recharge_threshold_met(value['battery'] - necessary_battery_to_process_item(value,
-                                                                                                       destination,
-                                                                                                       item_weight,
-                                                                                                       item_slot,
-                                                                                                       logger,
-                                                                                                       item_id),
-                                                  value['total_battery'])):
-            available_robots[key] = PriorityEntry(key, value)
+        if (not value['charging'] and not value['delivering'] and value['current_capacity'] + item_weight <= value['total_capacity']):
+            battery_to_accept_item = (necessary_battery_to_process_item(value,
+                                                                        destination,
+                                                                        item_weight,
+                                                                        item_slot,
+                                                                        logger,
+                                                                        item_id,
+                                                                        key) +
+                                     necessary_battery_to_move_to_docking_station_from_delivery_station(value['delivery_station'],
+                                                                                                        value['initial_position'],
+                                                                                                        value['battery_per_cell']))
+            battery_to_docking_station = necessary_battery_to_move_to_docking_station_with_safety_from_delivery_station(value['delivery_station'], 
+                                                                                                                        value['initial_position'],
+                                                                                                                        value['battery_per_cell'])
+            if (not is_recharge_threshold_met(value['battery'] - battery_to_accept_item, value['total_battery']) 
+                and value['battery'] - battery_to_accept_item > battery_to_docking_station):
+                available_robots[key] = PriorityEntry(key, value, destination)
 
     # logger.info('Available robots to process id {}: {}'.format(item_id, ', '.join(str(x.get_id()) for x in sorted(available_robots.values()))))
 

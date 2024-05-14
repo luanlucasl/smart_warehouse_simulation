@@ -4,7 +4,6 @@ from .kafka_consumer_wrapper import KafkaConsumerWrapper
 from .floyd_warshall import FloydWarshall
 from .priority_entry import PriorityEntry
 from rclpy import qos
-from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from queue import PriorityQueue
 from std_msgs.msg import String

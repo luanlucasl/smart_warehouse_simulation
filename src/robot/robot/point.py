@@ -29,9 +29,4 @@ class Point(dict):
     def distance(self, other):
         dx = self.x - other.x
         dy = self.y - other.y
-        return int(self.__normal_round(math.hypot(dx, dy)))
-
-    def __normal_round(self, n):
-        if n - math.floor(n) < 0.5:
-            return math.floor(n)
-        return math.ceil(n)
+        return math.hypot(dx, dy)

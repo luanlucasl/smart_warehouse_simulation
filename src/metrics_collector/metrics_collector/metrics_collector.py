@@ -18,7 +18,7 @@ class MetricsCollector(Node):
         header_v1 = ['robot_id', 'item_id', 'item_created_at', 'started_to_process_item_at', 'finished_processing_item_at',
                   'sector', 'robot_position', 'item_position', 'delivery_station', 'total_distance',
                   'processing_lasted_in_seconds', 'number_of_items', 'battery_used_for_task']
-        header_v2 = ['robot_id', 'items_data', 'started_to_process_item_at', 'finished_processing_item_at',
+        header_v2 = ['robot_id', 'started_to_process_item_at', 'finished_processing_item_at',
                   'sector', 'robot_started_from', 'delivery_station', 'total_distance',
                   'processing_lasted_in_seconds', 'battery_used_for_task', 'battery_after_processing_items', 'amount_of_items_processed']
         self.__csv_task_completion_file = open(task_completion_file_name, 'w', newline='', encoding='utf-8-sig')

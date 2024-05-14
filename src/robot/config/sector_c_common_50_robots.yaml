@@ -2,7 +2,7 @@
   ros__parameters:
     sector: 2
     cell_length: 1.0
-    delivery_station: [46, 0]
+    delivery_station: [17, 3]
     battery_per_cell: 0.5
     capacity: 1200
     speed: 2
