@@ -36,6 +36,7 @@ class Robot(Node):
         self.declare_parameter('capacity', rclpy.Parameter.Type.INTEGER)
         self.declare_parameter('speed', rclpy.Parameter.Type.INTEGER)
         self.declare_parameter('battery', rclpy.Parameter.Type.INTEGER)
+        self.declare_parameter('priority', rclpy.Parameter.Type.INTEGER)
 
         # get parameters
         delivery_station = self.get_parameter('delivery_station').get_parameter_value().integer_array_value
@@ -46,11 +47,12 @@ class Robot(Node):
 
         # kafka
         self.__kafka_consumer = KafkaConsumerWrapper('localhost:9092', 'my-topic-1', self.__sector)
-        self.get_logger().info("Robot sector {}".format(self.__sector))
         self.__latest_offset_processed = 0
+        self.__latest_offset_within_sector = 0
 
         # robot attributes
         # m/s
+        self.__priority = self.get_parameter('priority').get_parameter_value().integer_value
         self.__speed = self.get_parameter('speed').get_parameter_value().integer_value
         self.__total_battery = self.get_parameter('battery').get_parameter_value().integer_value
         self.__current_battery = self.__total_battery
@@ -73,23 +75,23 @@ class Robot(Node):
         self.__process_item_callback_group = MutuallyExclusiveCallbackGroup()
         qos_profile = QoSProfile(
             history=QoSHistoryPolicy.KEEP_LAST,
-            depth=50,
+            depth=500,
             reliability=QoSReliabilityPolicy.BEST_EFFORT,
             durability=QoSDurabilityPolicy.VOLATILE
         )
 
         # create a timer to request kafka for new available item
-        self.__check_new_item_timer = self.create_timer(0.6, self.accept_item,
+        self.__check_new_item_timer = self.create_timer(0.7, self.accept_item,
                                                         callback_group=self.__check_new_item_callback_group)
         # create a timer to process items
-        self.__process_item_timer = self.create_timer(0.5, self.process_item,
+        self.__process_item_timer = self.create_timer(1, self.process_item,
                                                       callback_group=self.__process_item_callback_group)
         # process data sent by other robots within the same sector
-        self.create_subscription(String, internal_sector_topic, self.update_sector_data, qos.qos_profile_parameters,
+        self.create_subscription(String, internal_sector_topic, self.update_sector_data, qos_profile,
                                  callback_group=self.__update_data_callback_group)
 
         # share robot attributes with other robots within the sector
-        self.__sector_publisher = self.create_publisher(String, internal_sector_topic, qos.qos_profile_parameters)
+        self.__sector_publisher = self.create_publisher(String, internal_sector_topic, qos_profile)
         self.__publish_robot_data_timer = self.create_timer(0.3, self.publish_robot_data,
                                                             callback_group=self.__publish_data_callback_group)
 
@@ -101,7 +103,9 @@ class Robot(Node):
         self.__metrics_publisher = self.create_publisher(String, 'metrics', qos.qos_profile_parameters)
         self.__item_accepted_metrics_publisher = self.create_publisher(String, 'item_accepted_metrics',
                                                                        qos.qos_profile_parameters)
-        self.__idle_metrics_publisher = self.create_publisher(String, 'idle_metrics', qos.qos_profile_parameters)
+        #self.__idle_metrics_publisher = self.create_publisher(String, 'idle_metrics', qos.qos_profile_parameters)
+
+        self.get_logger().info("Robot sector {}, initial position {}".format(self.__sector, self.__initial_position))
 
     def accept_item(self):
         if self.__delivering or self.__charging or is_recharge_threshold_met(self.__current_battery,
@@ -111,10 +115,10 @@ class Robot(Node):
         message = self.__kafka_consumer.poll_next()
 
         if message:
-            latest_processed_offset_within_sector = self.get_latest_processed_offset_within_sector()
-            if latest_processed_offset_within_sector > message.offset:
+            #latest_processed_offset_within_sector = self.get_latest_processed_offset_within_sector()
+            if self.__latest_offset_within_sector > message.offset:
                 # self.get_logger().info("Item {} already processed, seeking to latest offset".format(message.value.get('item')['id']))
-                self.__kafka_consumer.seek(latest_processed_offset_within_sector)
+                self.__kafka_consumer.seek(self.__latest_offset_within_sector)
                 return
         else:
             # self.get_logger().info("No message found")
@@ -126,12 +130,12 @@ class Robot(Node):
         item_weight = item['weight']
         slot_level = item['slot_level']
         destination = Point(item['x'], item['y'])
-        sector_data = self.__sector_data.copy()
-        should_process_item = should_accept_item(sector_data, self.get_name(), item_weight, slot_level,
+        #sector_data = self.__sector_data.copy()
+        should_process_item = should_accept_item(self.__sector_data, self.get_name(), item_weight, slot_level,
                                                  destination, self.get_logger(), item['id'])
         if should_process_item[0]:
             # we need to update the values right after the decision so it affects next items/decisions
-            self.__current_battery -= necessary_battery_to_process_item(sector_data[self.get_name()],
+            self.__current_battery -= necessary_battery_to_process_item(self.__sector_data[self.get_name()],
                                                                         destination, item_weight, slot_level,
                                                                         self.get_logger(), item['id'],
                                                                         self.get_name())
@@ -148,7 +152,7 @@ class Robot(Node):
             self.__latest_offset_processed = message.offset + 1
             # publish new robot data right after accepting item
             self.publish_robot_data()
-            self.__publish_robot_data_timer.reset()
+            self.__check_new_item_timer.reset()
 
             metrics_message = String()
             metrics_message.data = json.dumps({'robot_id': self.get_name(),
@@ -256,6 +260,8 @@ class Robot(Node):
     def update_sector_data(self, message):
         data = json.loads(message.data)
         robot_name = next(iter(data))
+        
+        self.__latest_offset_within_sector = max(self.__latest_offset_within_sector, data[robot_name]['latest_offset_processed'])
 
         data[robot_name]['current_position'] = Point(data[robot_name]['current_position']['x'],
                                                      data[robot_name]['current_position']['y'])
@@ -271,20 +277,19 @@ class Robot(Node):
         data[robot_name]['latest_item_position'] = latest_item_position
 
         self.__sector_data[robot_name] = data[robot_name]
-        # self.get_logger().info("Received {}".format(self.__sector_data[robot_name]))
-
+        
     def publish_robot_data(self):
         ros_message = String()
         ros_message.data = json.dumps(
             {self.get_name(): {'battery': self.__current_battery, 'total_battery': self.__total_battery,
+                               'priority': self.__priority,
                                'total_capacity': self.__total_capacity,
                                'current_capacity': self.__current_capacity, 'current_position': self.__current_position,
                                'charging': self.__charging, 'delivery_station': self.__delivery_station,
                                'battery_per_cell': self.__battery_per_cell, 'initial_position': self.__initial_position,
                                'latest_offset_processed': self.__latest_offset_processed,
                                'latest_item_position': self.__latest_picked_up_position,
-                               'delivering': self.__delivering,
-                               'items_waiting_to_be_processed': len(self.__items_to_be_picked_up)}},
+                               'delivering': self.__delivering}},
             default=vars)
         # self.get_logger().info("Sent {}".format(ros_message.data))
         self.__sector_publisher.publish(ros_message)
@@ -322,26 +327,26 @@ class Robot(Node):
 
             if self.__current_battery == self.__total_battery:
                 self.__charging = False
-                # immediately catch up to items/offset on kafka broker
-                self.publish_robot_data()
-                self.__publish_robot_data_timer.reset()
 
-                self.__check_new_item_timer.cancel()
-                self.accept_item()
+                self.publish_robot_data()
                 self.__check_new_item_timer.reset()
                 self.get_logger().info("Battery fully charged with {}.".format(self.__total_battery))
 
     def get_latest_processed_offset_within_sector(self):
-        sector_data = self.__sector_data.copy()
-        robot_name = max(self.__sector_data, key=lambda x: sector_data[x]['latest_offset_processed'])
-        return self.__sector_data[robot_name]['latest_offset_processed']
+        max_offset = -1
+        for key, value in self.__sector_data.items():
+            if value['latest_offset_processed']:
+                max_offset = max(max_offset, value['latest_offset_processed'])
+        
+        self.get_logger().info("max offset calculated {}".format(max_offset))
+        return max_offset
 
 
 def main(args=None):
     rclpy.init(args=args)
     try:
         robot = Robot()
-        executor = MultiThreadedExecutor(num_threads=os.cpu_count())
+        executor = MultiThreadedExecutor(num_threads=5)
         executor.add_node(robot)
 
         try:

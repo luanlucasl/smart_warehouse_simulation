@@ -15,9 +15,12 @@ def weight_ratio(current_weight, weight_capacity):
     return current_weight / weight_capacity
 
 
+def capacity_ratio(current_capacity, total_capacity):
+    return current_capacity / total_capacity
+
+
 def necessary_battery_to_move(source, destination, battery_per_cell, additional_battery):
-    return (source.distance(destination) * battery_per_cell) + additional_battery
-    #return source.distance(destination) * (battery_per_cell + (battery_per_cell * additional_battery))
+    return source.distance(destination) * (battery_per_cell + (battery_per_cell * additional_battery))
 
 
 def necessary_battery_to_lift_arm(slot_level):
@@ -28,9 +31,9 @@ def additional_battery_cost(weight, weight_capacity):
     ratio = weight_ratio(weight, weight_capacity)
 
     if 0.4 < ratio < 0.8:
-        return 0.05
+        return 0.03
     elif ratio > 0.8:
-        return 0.08
+        return 0.05
 
     return 0
 

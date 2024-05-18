@@ -4,27 +4,27 @@ import math
 SECTORS = 4
 # Sector 0
 SECTOR_0_MIN_COORDINATE_X = 0
-SECTOR_0_MAX_COORDINATE_X = 29
+SECTOR_0_MAX_COORDINATE_X = 31
 SECTOR_0_MIN_COORDINATE_Y = 0
-SECTOR_0_MAX_COORDINATE_Y = 29
+SECTOR_0_MAX_COORDINATE_Y = 31
 
 # Sector 1
 SECTOR_1_MIN_COORDINATE_X = 0
-SECTOR_1_MAX_COORDINATE_X = 29
+SECTOR_1_MAX_COORDINATE_X = 31
 SECTOR_1_MIN_COORDINATE_Y = SECTOR_0_MAX_COORDINATE_Y + 1
-SECTOR_1_MAX_COORDINATE_Y = SECTOR_1_MIN_COORDINATE_Y + 29
+SECTOR_1_MAX_COORDINATE_Y = SECTOR_1_MIN_COORDINATE_Y + 31
 
 # Sector 2
 SECTOR_2_MIN_COORDINATE_X = SECTOR_0_MAX_COORDINATE_X + 1
-SECTOR_2_MAX_COORDINATE_X = SECTOR_2_MIN_COORDINATE_X + 29
+SECTOR_2_MAX_COORDINATE_X = SECTOR_2_MIN_COORDINATE_X + 31
 SECTOR_2_MIN_COORDINATE_Y = 0
-SECTOR_2_MAX_COORDINATE_Y = 29
+SECTOR_2_MAX_COORDINATE_Y = 31
 
 # Sector 3
 SECTOR_3_MIN_COORDINATE_X = SECTOR_1_MAX_COORDINATE_X + 1
-SECTOR_3_MAX_COORDINATE_X = SECTOR_3_MIN_COORDINATE_X + 29
+SECTOR_3_MAX_COORDINATE_X = SECTOR_3_MIN_COORDINATE_X + 31
 SECTOR_3_MIN_COORDINATE_Y = SECTOR_2_MAX_COORDINATE_Y + 1
-SECTOR_3_MAX_COORDINATE_Y = SECTOR_3_MIN_COORDINATE_Y + 29
+SECTOR_3_MAX_COORDINATE_Y = SECTOR_3_MIN_COORDINATE_Y + 31
 
 def generate(sector, number_of_robots, delivery_station_position, startX, startY, limitX, limitY):
     delivery_station = [0, 0]
@@ -45,6 +45,7 @@ def generate(sector, number_of_robots, delivery_station_position, startX, startY
         print("/warehouse/robot_" + str(robotNumber) + str(sector) + ":")
         print("  ros__parameters:")
         print("    initial_position: [" + str(startX) + ", " + str(j) + "]")
+        print("    priority: " + str(robotNumber))
         robotNumber += 1
 		
     # left-hand side
@@ -60,6 +61,7 @@ def generate(sector, number_of_robots, delivery_station_position, startX, startY
         print("/warehouse/robot_" + str(robotNumber) + str(sector) + ":")
         print("  ros__parameters:");
         print("    initial_position: [" + str(j) + ", " + str(startY) + "]")
+        print("    priority: " + str(robotNumber))
         robotNumber += 1
 
     # right-hand side
@@ -74,6 +76,7 @@ def generate(sector, number_of_robots, delivery_station_position, startX, startY
         print("/warehouse/robot_" + str(robotNumber) + str(sector) + ":")
         print("  ros__parameters:");
         print("    initial_position: [" + str(j) + ", " + str(limitY) + "]")
+        print("    priority: " + str(robotNumber))
         robotNumber += 1
 
     # top side
@@ -82,6 +85,7 @@ def generate(sector, number_of_robots, delivery_station_position, startX, startY
         print("/warehouse/robot_" + str(robotNumber) + str(sector) + ":");
         print("  ros__parameters:");
         print("    initial_position: [" + str(limitX) + ", " + str(j) + "]");
+        print("    priority: " + str(robotNumber))
         robotNumber += 1
     
     print("delivery_station: " + str(delivery_station))
@@ -89,7 +93,7 @@ def generate(sector, number_of_robots, delivery_station_position, startX, startY
 
 if __name__ == '__main__':
     result = list()
-    generate('a', 50, 0, SECTOR_0_MIN_COORDINATE_X, SECTOR_0_MIN_COORDINATE_Y, SECTOR_0_MAX_COORDINATE_X, SECTOR_0_MAX_COORDINATE_Y)
-    generate('b', 50, 1, SECTOR_1_MIN_COORDINATE_X, SECTOR_1_MIN_COORDINATE_Y, SECTOR_1_MAX_COORDINATE_X, SECTOR_1_MAX_COORDINATE_Y)
-    generate('c', 50, 0, SECTOR_2_MIN_COORDINATE_X, SECTOR_2_MIN_COORDINATE_Y, SECTOR_2_MAX_COORDINATE_X, SECTOR_2_MAX_COORDINATE_Y)
-    generate('d', 50, 1, SECTOR_3_MIN_COORDINATE_X, SECTOR_3_MIN_COORDINATE_Y, SECTOR_3_MAX_COORDINATE_X, SECTOR_3_MAX_COORDINATE_Y)
+    generate('a', 25, 0, SECTOR_0_MIN_COORDINATE_X, SECTOR_0_MIN_COORDINATE_Y, SECTOR_0_MAX_COORDINATE_X, SECTOR_0_MAX_COORDINATE_Y)
+    generate('b', 25, 1, SECTOR_1_MIN_COORDINATE_X, SECTOR_1_MIN_COORDINATE_Y, SECTOR_1_MAX_COORDINATE_X, SECTOR_1_MAX_COORDINATE_Y)
+    generate('c', 25, 0, SECTOR_2_MIN_COORDINATE_X, SECTOR_2_MIN_COORDINATE_Y, SECTOR_2_MAX_COORDINATE_X, SECTOR_2_MAX_COORDINATE_Y)
+    generate('d', 25, 1, SECTOR_3_MIN_COORDINATE_X, SECTOR_3_MIN_COORDINATE_Y, SECTOR_3_MAX_COORDINATE_X, SECTOR_3_MAX_COORDINATE_Y)

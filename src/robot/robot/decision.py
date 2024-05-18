@@ -25,7 +25,7 @@ def should_accept_item(sector_data, robot_name, item_weight, item_slot, destinat
                 and value['battery'] - battery_to_accept_item > battery_to_docking_station):
                 available_robots[key] = PriorityEntry(key, value, destination)
 
-    # logger.info('Available robots to process id {}: {}'.format(item_id, ', '.join(str(x.get_id()) for x in sorted(available_robots.values()))))
+    #logger.info('Available robots to process id {}: {}'.format(item_id, ', '.join(str(x.get_id()) for x in sorted(available_robots.values()))))
 
     if len(available_robots) == 0 or robot_name not in available_robots.keys():
         return (False, len(available_robots))
