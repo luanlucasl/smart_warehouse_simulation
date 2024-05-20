@@ -1,0 +1,112 @@
+# Omron-HD 1500
+# https://industrial.omron.eu/en/products/hd-series#specifications_ordering_info
+/**:
+  ros__parameters:
+    sector: 2
+    cell_length: 1.0
+    delivery_station: [49, 0]
+    battery_per_cell: 0.5
+    capacity: 1500
+    speed: 1.8 
+    battery: 100
+
+/warehouse/robot_1c:
+  ros__parameters:
+    initial_position: [32, 14]
+    priority: 1
+/warehouse/robot_2c:
+  ros__parameters:
+    initial_position: [32, 15]
+    priority: 2
+/warehouse/robot_3c:
+  ros__parameters:
+    initial_position: [32, 16]
+    priority: 3
+/warehouse/robot_4c:
+  ros__parameters:
+    initial_position: [32, 17]
+    priority: 4
+/warehouse/robot_5c:
+  ros__parameters:
+    initial_position: [32, 18]
+    priority: 5
+/warehouse/robot_6c:
+  ros__parameters:
+    initial_position: [32, 19]
+    priority: 6
+/warehouse/robot_7c:
+  ros__parameters:
+    initial_position: [32, 20]
+    priority: 7
+/warehouse/robot_8c:
+  ros__parameters:
+    initial_position: [46, 0]
+    priority: 8
+/warehouse/robot_9c:
+  ros__parameters:
+    initial_position: [47, 0]
+    priority: 9
+/warehouse/robot_10c:
+  ros__parameters:
+    initial_position: [48, 0]
+    priority: 10
+/warehouse/robot_11c:
+  ros__parameters:
+    initial_position: [50, 0]
+    priority: 11
+/warehouse/robot_12c:
+  ros__parameters:
+    initial_position: [51, 0]
+    priority: 12
+/warehouse/robot_13c:
+  ros__parameters:
+    initial_position: [52, 0]
+    priority: 13
+/warehouse/robot_14c:
+  ros__parameters:
+    initial_position: [46, 31]
+    priority: 14
+/warehouse/robot_15c:
+  ros__parameters:
+    initial_position: [47, 31]
+    priority: 15
+/warehouse/robot_16c:
+  ros__parameters:
+    initial_position: [48, 31]
+    priority: 16
+/warehouse/robot_17c:
+  ros__parameters:
+    initial_position: [49, 31]
+    priority: 17
+/warehouse/robot_18c:
+  ros__parameters:
+    initial_position: [50, 31]
+    priority: 18
+/warehouse/robot_19c:
+  ros__parameters:
+    initial_position: [51, 31]
+    priority: 19
+/warehouse/robot_20c:
+  ros__parameters:
+    initial_position: [63, 14]
+    priority: 20
+/warehouse/robot_21c:
+  ros__parameters:
+    initial_position: [63, 15]
+    priority: 21
+/warehouse/robot_22c:
+  ros__parameters:
+    initial_position: [63, 16]
+    priority: 22
+/warehouse/robot_23c:
+  ros__parameters:
+    initial_position: [63, 17]
+    priority: 23
+/warehouse/robot_24c:
+  ros__parameters:
+    initial_position: [63, 18]
+    priority: 24
+/warehouse/robot_25c:
+  ros__parameters:
+    initial_position: [63, 19]
+    priority: 25

@@ -34,7 +34,7 @@ class Robot(Node):
         self.declare_parameter('cell_length', rclpy.Parameter.Type.DOUBLE)
         self.declare_parameter('battery_per_cell', rclpy.Parameter.Type.DOUBLE)
         self.declare_parameter('capacity', rclpy.Parameter.Type.INTEGER)
-        self.declare_parameter('speed', rclpy.Parameter.Type.INTEGER)
+        self.declare_parameter('speed', rclpy.Parameter.Type.DOUBLE)
         self.declare_parameter('battery', rclpy.Parameter.Type.INTEGER)
         self.declare_parameter('priority', rclpy.Parameter.Type.INTEGER)
 
@@ -51,9 +51,9 @@ class Robot(Node):
         self.__latest_offset_within_sector = 0
 
         # robot attributes
-        # m/s
         self.__priority = self.get_parameter('priority').get_parameter_value().integer_value
-        self.__speed = self.get_parameter('speed').get_parameter_value().integer_value
+        # m/s
+        self.__speed = self.get_parameter('speed').get_parameter_value().double_value
         self.__total_battery = self.get_parameter('battery').get_parameter_value().integer_value
         self.__current_battery = self.__total_battery
         self.__total_capacity = self.get_parameter('capacity').get_parameter_value().integer_value

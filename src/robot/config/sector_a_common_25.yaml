@@ -1,0 +1,112 @@
+# Pollux MiR600
+# https://mobile-industrial-robots.com/products/robots/mir600
+/**:
+  ros__parameters:
+    sector: 0
+    cell_length: 1.0
+    delivery_station: [17, 0]
+    battery_per_cell: 0.5
+    capacity: 600
+    speed: 2.0
+    battery: 100
+
+/warehouse/robot_1a:
+  ros__parameters:
+    initial_position: [0, 14]
+    priority: 1
+/warehouse/robot_2a:
+  ros__parameters:
+    initial_position: [0, 15]
+    priority: 2
+/warehouse/robot_3a:
+  ros__parameters:
+    initial_position: [0, 16]
+    priority: 3
+/warehouse/robot_4a:
+  ros__parameters:
+    initial_position: [0, 17]
+    priority: 4
+/warehouse/robot_5a:
+  ros__parameters:
+    initial_position: [0, 18]
+    priority: 5
+/warehouse/robot_6a:
+  ros__parameters:
+    initial_position: [0, 19]
+    priority: 6
+/warehouse/robot_7a:
+  ros__parameters:
+    initial_position: [0, 20]
+    priority: 7
+/warehouse/robot_8a:
+  ros__parameters:
+    initial_position: [14, 0]
+    priority: 8
+/warehouse/robot_9a:
+  ros__parameters:
+    initial_position: [15, 0]
+    priority: 9
+/warehouse/robot_10a:
+  ros__parameters:
+    initial_position: [16, 0]
+    priority: 10
+/warehouse/robot_11a:
+  ros__parameters:
+    initial_position: [18, 0]
+    priority: 11
+/warehouse/robot_12a:
+  ros__parameters:
+    initial_position: [19, 0]
+    priority: 12
+/warehouse/robot_13a:
+  ros__parameters:
+    initial_position: [20, 0]
+    priority: 13
+/warehouse/robot_14a:
+  ros__parameters:
+    initial_position: [14, 31]
+    priority: 14
+/warehouse/robot_15a:
+  ros__parameters:
+    initial_position: [15, 31]
+    priority: 15
+/warehouse/robot_16a:
+  ros__parameters:
+    initial_position: [16, 31]
+    priority: 16
+/warehouse/robot_17a:
+  ros__parameters:
+    initial_position: [17, 31]
+    priority: 17
+/warehouse/robot_18a:
+  ros__parameters:
+    initial_position: [18, 31]
+    priority: 18
+/warehouse/robot_19a:
+  ros__parameters:
+    initial_position: [19, 31]
+    priority: 19
+/warehouse/robot_20a:
+  ros__parameters:
+    initial_position: [31, 14]
+    priority: 20
+/warehouse/robot_21a:
+  ros__parameters:
+    initial_position: [31, 15]
+    priority: 21
+/warehouse/robot_22a:
+  ros__parameters:
+    initial_position: [31, 16]
+    priority: 22
+/warehouse/robot_23a:
+  ros__parameters:
+    initial_position: [31, 17]
+    priority: 23
+/warehouse/robot_24a:
+  ros__parameters:
+    initial_position: [31, 18]
+    priority: 24
+/warehouse/robot_25a:
+  ros__parameters:
+    initial_position: [31, 19]
+    priority: 25

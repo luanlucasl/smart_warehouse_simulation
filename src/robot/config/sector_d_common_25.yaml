@@ -1,0 +1,112 @@
+# Otto-1500-v2
+# https://ottomotors.com/1500/
+/**:
+  ros__parameters:
+    sector: 3
+    cell_length: 1.0
+    delivery_station: [49, 63]
+    battery_per_cell: 0.5
+    capacity: 1900
+    speed: 2.0
+    battery: 100
+
+/warehouse/robot_1d:
+  ros__parameters:
+    initial_position: [32, 46]
+    priority: 1
+/warehouse/robot_2d:
+  ros__parameters:
+    initial_position: [32, 47]
+    priority: 2
+/warehouse/robot_3d:
+  ros__parameters:
+    initial_position: [32, 48]
+    priority: 3
+/warehouse/robot_4d:
+  ros__parameters:
+    initial_position: [32, 49]
+    priority: 4
+/warehouse/robot_5d:
+  ros__parameters:
+    initial_position: [32, 50]
+    priority: 5
+/warehouse/robot_6d:
+  ros__parameters:
+    initial_position: [32, 51]
+    priority: 6
+/warehouse/robot_7d:
+  ros__parameters:
+    initial_position: [32, 52]
+    priority: 7
+/warehouse/robot_8d:
+  ros__parameters:
+    initial_position: [46, 32]
+    priority: 8
+/warehouse/robot_9d:
+  ros__parameters:
+    initial_position: [47, 32]
+    priority: 9
+/warehouse/robot_10d:
+  ros__parameters:
+    initial_position: [48, 32]
+    priority: 10
+/warehouse/robot_11d:
+  ros__parameters:
+    initial_position: [49, 32]
+    priority: 11
+/warehouse/robot_12d:
+  ros__parameters:
+    initial_position: [50, 32]
+    priority: 12
+/warehouse/robot_13d:
+  ros__parameters:
+    initial_position: [51, 32]
+    priority: 13
+/warehouse/robot_14d:
+  ros__parameters:
+    initial_position: [46, 63]
+    priority: 14
+/warehouse/robot_15d:
+  ros__parameters:
+    initial_position: [47, 63]
+    priority: 15
+/warehouse/robot_16d:
+  ros__parameters:
+    initial_position: [48, 63]
+    priority: 16
+/warehouse/robot_17d:
+  ros__parameters:
+    initial_position: [50, 63]
+    priority: 17
+/warehouse/robot_18d:
+  ros__parameters:
+    initial_position: [51, 63]
+    priority: 18
+/warehouse/robot_19d:
+  ros__parameters:
+    initial_position: [52, 63]
+    priority: 19
+/warehouse/robot_20d:
+  ros__parameters:
+    initial_position: [63, 46]
+    priority: 20
+/warehouse/robot_21d:
+  ros__parameters:
+    initial_position: [63, 47]
+    priority: 21
+/warehouse/robot_22d:
+  ros__parameters:
+    initial_position: [63, 48]
+    priority: 22
+/warehouse/robot_23d:
+  ros__parameters:
+    initial_position: [63, 49]
+    priority: 23
+/warehouse/robot_24d:
+  ros__parameters:
+    initial_position: [63, 50]
+    priority: 24
+/warehouse/robot_25d:
+  ros__parameters:
+    initial_position: [63, 51]
+    priority: 25

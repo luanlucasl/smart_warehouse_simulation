@@ -12,141 +12,101 @@
 
 /warehouse/robot_1b:
   ros__parameters:
-    initial_position: [0, 45]
+    initial_position: [0, 46]
     priority: 1
 /warehouse/robot_2b:
   ros__parameters:
-    initial_position: [0, 46]
+    initial_position: [0, 47]
     priority: 2
 /warehouse/robot_3b:
   ros__parameters:
-    initial_position: [0, 47]
+    initial_position: [0, 48]
     priority: 3
 /warehouse/robot_4b:
   ros__parameters:
-    initial_position: [0, 48]
+    initial_position: [0, 49]
     priority: 4
 /warehouse/robot_5b:
   ros__parameters:
-    initial_position: [0, 49]
+    initial_position: [0, 50]
     priority: 5
 /warehouse/robot_6b:
   ros__parameters:
-    initial_position: [0, 50]
+    initial_position: [0, 51]
     priority: 6
 /warehouse/robot_7b:
   ros__parameters:
-    initial_position: [0, 51]
+    initial_position: [0, 52]
     priority: 7
 /warehouse/robot_8b:
   ros__parameters:
-    initial_position: [0, 52]
+    initial_position: [14, 32]
     priority: 8
 /warehouse/robot_9b:
   ros__parameters:
-    initial_position: [0, 53]
+    initial_position: [15, 32]
     priority: 9
 /warehouse/robot_10b:
   ros__parameters:
-    initial_position: [13, 32]
+    initial_position: [16, 32]
     priority: 10
 /warehouse/robot_11b:
   ros__parameters:
-    initial_position: [14, 32]
+    initial_position: [17, 32]
     priority: 11
 /warehouse/robot_12b:
   ros__parameters:
-    initial_position: [15, 32]
+    initial_position: [18, 32]
     priority: 12
 /warehouse/robot_13b:
   ros__parameters:
-    initial_position: [16, 32]
+    initial_position: [19, 32]
     priority: 13
 /warehouse/robot_14b:
   ros__parameters:
-    initial_position: [17, 32]
+    initial_position: [14, 63]
     priority: 14
 /warehouse/robot_15b:
   ros__parameters:
-    initial_position: [18, 32]
+    initial_position: [15, 63]
     priority: 15
 /warehouse/robot_16b:
   ros__parameters:
-    initial_position: [19, 32]
+    initial_position: [16, 63]
     priority: 16
 /warehouse/robot_17b:
   ros__parameters:
-    initial_position: [20, 32]
+    initial_position: [18, 63]
     priority: 17
 /warehouse/robot_18b:
   ros__parameters:
-    initial_position: [21, 32]
+    initial_position: [19, 63]
     priority: 18
 /warehouse/robot_19b:
   ros__parameters:
-    initial_position: [12, 63]
+    initial_position: [20, 63]
     priority: 19
 /warehouse/robot_20b:
   ros__parameters:
-    initial_position: [13, 63]
+    initial_position: [31, 46]
     priority: 20
 /warehouse/robot_21b:
   ros__parameters:
-    initial_position: [14, 63]
+    initial_position: [31, 47]
     priority: 21
 /warehouse/robot_22b:
   ros__parameters:
-    initial_position: [15, 63]
+    initial_position: [31, 48]
     priority: 22
 /warehouse/robot_23b:
   ros__parameters:
-    initial_position: [16, 63]
+    initial_position: [31, 49]
     priority: 23
 /warehouse/robot_24b:
   ros__parameters:
-    initial_position: [18, 63]
+    initial_position: [31, 50]
     priority: 24
 /warehouse/robot_25b:
   ros__parameters:
-    initial_position: [19, 63]
-    priority: 25
-/warehouse/robot_26b:
-  ros__parameters:
-    initial_position: [20, 63]
-    priority: 26
-/warehouse/robot_27b:
-  ros__parameters:
-    initial_position: [21, 63]
-    priority: 27
-/warehouse/robot_28b:
-  ros__parameters:
-    initial_position: [31, 45]
-    priority: 28
-/warehouse/robot_29b:
-  ros__parameters:
-    initial_position: [31, 46]
-    priority: 29
-/warehouse/robot_30b:
-  ros__parameters:
-    initial_position: [31, 47]
-    priority: 30
-/warehouse/robot_31b:
-  ros__parameters:
-    initial_position: [31, 48]
-    priority: 31
-/warehouse/robot_32b:
-  ros__parameters:
-    initial_position: [31, 49]
-    priority: 32
-/warehouse/robot_33b:
-  ros__parameters:
-    initial_position: [31, 50]
-    priority: 33
-/warehouse/robot_34b:
-  ros__parameters:
     initial_position: [31, 51]
-    priority: 34
-/warehouse/robot_35b:
-  ros__parameters:
-    initial_position: [31, 52]
-    priority: 35
+    priority: 25
