@@ -28,7 +28,7 @@
     priority: 4
 /warehouse/robot_5c:
   ros__parameters:
-    initial_position: [32, 18]
+    initial_position: [32, 18] 
     priority: 5
 /warehouse/robot_6c:
   ros__parameters:

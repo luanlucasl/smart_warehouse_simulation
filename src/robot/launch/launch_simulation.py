@@ -19,7 +19,7 @@ def generate_launch_description():
     )
 
     # sector 0
-    n = 45
+    n = 35
     nodes_sector_a = [None] * (n + 1)
     nodes_sector_a[0] = PushRosNamespace('warehouse')
     for i in range(1, n + 1):
@@ -45,7 +45,7 @@ def generate_launch_description():
     sector_b_robots = GroupAction(actions=nodes_sector_b)
 
     # sector 2
-    n = 15
+    n = 20
     nodes_sector_c = [None] * (n + 1)
     nodes_sector_c[0] = PushRosNamespace('warehouse')
     for i in range(1, n + 1):
@@ -58,7 +58,7 @@ def generate_launch_description():
     sector_c_robots = GroupAction(actions=nodes_sector_c)
 
     # sector 3
-    n = 15
+    n = 20
     nodes_sector_d = [None] * (n + 1)
     nodes_sector_d[0] = PushRosNamespace('warehouse')
     for i in range(1, n + 1):
