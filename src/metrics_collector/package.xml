@@ -3,8 +3,8 @@
 <package format="3">
   <name>metrics_collector</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="root@todo.todo">root</maintainer>
+  <description>responsible for parsing metrics sent by the robot</description>
+  <maintainer email="luaan.lourenco@gmail.com">Luan Lucas Lourenco</maintainer>
   <license>Apache-2.0</license>
 
   <depend>rclpy</depend>
